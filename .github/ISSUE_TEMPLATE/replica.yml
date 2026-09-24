@@ -1,0 +1,36 @@
+name: Derecho de réplica o corrección
+description: Una cifra, una sociedad o una frase está mal asignada. Adjunta el documento que lo prueba.
+title: "[Réplica] "
+labels: ["réplica"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Aquí se corrige cualquier dato que no esté bien probado. Las empresas afectadas pueden usar este formulario
+        en nombre propio; la respuesta y la corrección quedan públicas en este mismo hilo.
+  - type: input
+    id: cotizada
+    attributes:
+      label: Cotizada
+      placeholder: "Por ejemplo: Iberdrola"
+    validations:
+      required: true
+  - type: textarea
+    id: que
+    attributes:
+      label: Qué está mal
+      description: La sociedad, instalación, resolución o frase concreta, y por qué.
+    validations:
+      required: true
+  - type: textarea
+    id: prueba
+    attributes:
+      label: Documento que lo prueba
+      description: Enlace a un documento público (cuentas depositadas, BORME, BOE, nota a la CNMV) y la página.
+    validations:
+      required: true
+  - type: input
+    id: en_nombre
+    attributes:
+      label: En nombre de (opcional)
+      description: Si escribes por una empresa, cuál.

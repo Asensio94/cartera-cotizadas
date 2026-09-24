@@ -1,0 +1,71 @@
+name: diario
+
+on:
+  schedule:
+    - cron: "30 10 * * 1-6"  # después del grafo de promotores y del observatorio
+  workflow_dispatch:
+    inputs:
+      anexos:
+        description: "Volver a leer todos los PDF de cuentas consolidadas"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: diario
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Asensio94/grafo-promotores
+          path: fuentes/grafo-promotores
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /promotores/
+            /data/grafo.json
+            /data/borme/
+      - uses: actions/checkout@v4
+        with:
+          repository: Asensio94/observatorio-alegaciones
+          path: fuentes/observatorio-alegaciones
+          sparse-checkout: docs/datos/condicionado
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Cartera y web
+        env:
+          PYTHONIOENCODING: utf-8
+          CARTERA_GRAFO: ${{ github.workspace }}/fuentes/grafo-promotores
+          CARTERA_OBSERVATORIO: ${{ github.workspace }}/fuentes/observatorio-alegaciones
+        run: python -m cartera ${{ inputs.anexos && '--anexos' || '' }}
+      - name: Guardar datos
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/anexos data/natura_dia.json docs
+          git diff --cached --quiet || git commit -m "Actualización diaria $(date -u +%F)"
+          git push
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+  publicar:
+    needs: actualizar
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - id: despliegue
+        uses: actions/deploy-pages@v4
