@@ -4,18 +4,19 @@ from __future__ import annotations
 from pathlib import Path
 
 from . import config
+from .logo import LOGO_SVG, favicon_link
 
 PLANTILLA = r"""<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+__FAVICON__
 <title>Cartera de las cotizadas</title>
 <meta name="description" content="Qué proyectos energéticos tramita en España cada empresa cotizada, con sus declaraciones de impacto ambiental, su relación con la Red Natura 2000 y sus indicios de fraccionamiento. Cada cifra, con su fuente.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230f6b6b'/%3E%3Cpath d='M7 23V9h4v14zm7 0V13h4v10zm7 0V6h4v17z' fill='%23fff'/%3E%3C/svg%3E">
 <style>
 /*__COMMON_CSS__*/
 :root{--accent:#0f6b6b;--accent-dark:#5cc4c4}
@@ -134,7 +135,7 @@ details.cadena ol{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--
 <body>
 <header class="site-header">
   <div class="marca">Registro público · BOE · BORME · cuentas consolidadas</div>
-  <h1>Cartera de las <span>cotizadas</span></h1>
+  <h1>__LOGO__Cartera de las <span>cotizadas</span></h1>
   <p class="lede">Qué proyectos energéticos tramita en España cada empresa cotizada, qué le exigieron sus declaraciones de impacto ambiental y qué dicen esas declaraciones de la Red Natura 2000, con los anuncios del BOE desde 2018, el BORME y los anexos de sus cuentas consolidadas.</p>
   <div class="figures">
 <!--__FIGURES__-->
@@ -385,6 +386,8 @@ def _figures(datos: dict) -> str:
 
 def render(datos: dict) -> str:
     html = (PLANTILLA
+            .replace("__LOGO__", LOGO_SVG)
+            .replace("__FAVICON__", favicon_link("#0f6b6b", "#5cc4c4"))
             .replace("/*__COMMON_CSS__*/", COMMON_CSS.read_text(encoding="utf-8").strip())
             .replace("<!--__FIGURES__-->", _figures(datos)))
     left = [m for m in ("__COMMON_CSS__", "__FIGURES__") if m in html]
