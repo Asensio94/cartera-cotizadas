@@ -1,6 +1,7 @@
 """La página pública: docs/index.html, que lee docs/datos/cartera.json."""
 from __future__ import annotations
 
+from pathlib import Path
 
 from . import config
 
@@ -13,81 +14,77 @@ PLANTILLA = r"""<!doctype html>
 <meta name="description" content="Qué proyectos energéticos tramita en España cada empresa cotizada, con sus declaraciones de impacto ambiental, su relación con la Red Natura 2000 y sus indicios de fraccionamiento. Cada cifra, con su fuente.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%232f45a3'/%3E%3Cpath d='M7 23V9h4v14zm7 0V13h4v10zm7 0V6h4v17z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230f6b6b'/%3E%3Cpath d='M7 23V9h4v14zm7 0V13h4v10zm7 0V6h4v17z' fill='%23fff'/%3E%3C/svg%3E">
 <style>
+/*__COMMON_CSS__*/
+:root{--accent:#0f6b6b;--accent-dark:#5cc4c4}
+/* Repo tokens point to the common ones; only meaningful colours (Natura levels, warnings) keep their own values. */
 :root{
-  --suelo:#f2f4f3; --hoja:#ffffff; --tinta:#16211e; --gris:#56635e; --raya:#d3dbd8; --raya-2:#e7ecea;
-  --sello:#2f45a3; --sello-suave:#e4e8f7; --sello-tinta:#ffffff;
+  --suelo:var(--ground); --hoja:var(--paper); --tinta:var(--ink); --gris:var(--muted); --raya:var(--line); --raya-2:#e9e3de;
+  --sello:var(--accent); --sello-suave:#dcefee; --sello-tinta:#ffffff;
   --dentro:#b3401a; --dentro-suave:#f8e3da; --entorno:#95680b; --entorno-suave:#f5ecd6;
   --fuera:#3d7350; --fuera-suave:#e0efe5; --nada:#6d7773; --nada-suave:#e9edeb;
   --aviso:#8a5a00;
-  --serif:"Archivo",ui-sans-serif,system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --serif:var(--font-text); --mono:var(--font-data);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --suelo:#0e1412; --hoja:#151d1a; --tinta:#e3e9e6; --gris:#9aa6a1; --raya:#2b3632; --raya-2:#1f2926;
-    --sello:#9aa8ff; --sello-suave:#232b4d; --sello-tinta:#0e1412;
+    --raya-2:#28211d; --sello-suave:#163331; --sello-tinta:var(--ground);
     --dentro:#f08a63; --dentro-suave:#3a2219; --entorno:#e0b54f; --entorno-suave:#352b14;
     --fuera:#79c08f; --fuera-suave:#1a3022; --nada:#98a39f; --nada-suave:#232c29; --aviso:#e0b54f;
   }
 }
 :root[data-theme="dark"]{
-  --suelo:#0e1412; --hoja:#151d1a; --tinta:#e3e9e6; --gris:#9aa6a1; --raya:#2b3632; --raya-2:#1f2926;
-  --sello:#9aa8ff; --sello-suave:#232b4d; --sello-tinta:#0e1412;
+  --raya-2:#28211d; --sello-suave:#163331; --sello-tinta:var(--ground);
   --dentro:#f08a63; --dentro-suave:#3a2219; --entorno:#e0b54f; --entorno-suave:#352b14;
   --fuera:#79c08f; --fuera-suave:#1a3022; --nada:#98a39f; --nada-suave:#232c29; --aviso:#e0b54f;
 }
-*{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--suelo);color:var(--tinta);font:15px/1.55 var(--serif);font-stretch:100%}
-a{color:var(--sello);text-underline-offset:2px}
-a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--sello);outline-offset:2px}
 .mono,.num{font-family:var(--mono)}
 .num{font-variant-numeric:tabular-nums}
-header.cab{border-bottom:1px solid var(--raya);background:var(--hoja)}
-.cab-in{max-width:1240px;margin:0 auto;padding:28px 16px 22px;display:grid;gap:14px}
-.marca{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gris)}
-h1{margin:0;font-size:clamp(30px,5vw,50px);line-height:1.02;font-weight:800;font-stretch:125%;letter-spacing:-.01em;text-wrap:balance}
-.lema{margin:0;max-width:68ch;color:var(--gris);font-size:16px}
+.marca{font:600 13px/1.2 var(--font-title);letter-spacing:.08em;text-transform:uppercase;color:var(--gris)}
 .avisos{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border:1px solid var(--raya);border-radius:3px;font-size:12.5px;background:var(--hoja);color:var(--tinta)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border:1px solid var(--raya);font-size:13px;background:var(--hoja);color:var(--tinta)}
 .chip b{font-weight:600}
 .chip.sello{border-color:var(--sello);color:var(--sello)}
-main{max-width:1240px;margin:0 auto;padding:22px 16px 60px;display:grid;grid-template-columns:270px minmax(0,1fr);gap:26px;align-items:start}
+main{max-width:1440px;margin:0 auto;padding:22px 16px 40px;display:grid;grid-template-columns:270px minmax(0,1fr);gap:26px;align-items:start}
 nav.lista{position:sticky;top:12px;display:grid;gap:10px}
-nav.lista h2{font-size:12px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--gris);margin:0}
+nav.lista h2{font:600 13px/1.2 var(--font-title);letter-spacing:.08em;text-transform:uppercase;color:var(--gris);margin:0}
 nav.lista .orden{font-size:12.5px;color:var(--gris);margin:0}
 nav.lista ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--raya)}
 nav.lista li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:8px;width:100%;padding:8px 8px;border-bottom:1px solid var(--raya-2);font-size:14.5px}
 nav.lista li button:hover{background:var(--raya-2)}
 nav.lista li button[aria-current="true"]{background:var(--sello);color:var(--sello-tinta)}
 nav.lista li button[aria-current="true"] .num{color:var(--sello-tinta)}
+nav.lista li button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 nav.lista li .num{font-size:12px;color:var(--gris);align-self:center}
 nav.lista li button.vacia{color:var(--gris)}
 nav.lista select{display:none}
-.hoja{background:var(--hoja);border:1px solid var(--raya);border-radius:4px}
+.hoja{background:var(--hoja);border:1px solid var(--raya);box-shadow:var(--shadow)}
 .ficha{padding:22px 22px 8px;display:grid;gap:14px}
-.ficha h2{margin:0;font-size:clamp(26px,3.6vw,38px);font-weight:800;font-stretch:118%;line-height:1.05;text-wrap:balance}
+.ficha h2{margin:0;font:700 clamp(28px,3.8vw,42px)/1 var(--font-title);text-wrap:balance}
 .meta{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--gris);font-size:13.5px}
 .docs{display:grid;gap:4px;font-size:13.5px}
 .libro{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));border-top:1px solid var(--raya);margin:4px -22px 0}
 .libro button{all:unset;box-sizing:border-box;cursor:pointer;padding:14px 22px 14px;border-right:1px solid var(--raya-2);border-bottom:1px solid var(--raya-2);display:grid;gap:2px}
 .libro button:hover{background:var(--raya-2)}
+.libro button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .libro .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:24px;font-weight:500;line-height:1.1}
 .libro .e{font-size:12.5px;color:var(--gris)}
 .libro .pend .v{font-size:15px;color:var(--aviso);font-family:var(--serif);font-weight:600}
 .pestanas{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--raya);padding:0 12px;background:var(--hoja);position:sticky;top:0;z-index:2}
-.pestanas button{all:unset;cursor:pointer;padding:11px 12px;font-size:14px;border-bottom:3px solid transparent;color:var(--gris)}
-.pestanas button[aria-selected="true"]{color:var(--tinta);border-bottom-color:var(--sello);font-weight:600}
+.pestanas button{all:unset;cursor:pointer;padding:11px 12px;font:600 15px/1.2 var(--font-title);letter-spacing:.04em;text-transform:uppercase;border-bottom:3px solid transparent;color:var(--gris)}
+.pestanas button[aria-selected="true"]{color:var(--tinta);border-bottom-color:var(--sello)}
+.pestanas button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .panel{padding:16px 22px 26px}
 .panel p.intro{margin:0 0 12px;color:var(--gris);max-width:75ch;font-size:14px}
-.tabla{overflow-x:auto;border:1px solid var(--raya-2);border-radius:3px}
-table{border-collapse:collapse;width:100%;font-size:13.5px}
-th{font-weight:600;text-align:left;font-size:12px;color:var(--gris);text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid var(--raya);background:var(--raya-2);position:sticky;top:0}
-td{padding:8px 10px;border-bottom:1px solid var(--raya-2);vertical-align:top}
-td.num,th.num{text-align:right;white-space:nowrap}
-tr:last-child td{border-bottom:0}
+.tabla{overflow-x:auto;border:1px solid var(--raya-2)}
+.tabla table{border-collapse:collapse;width:100%;font-size:13.5px}
+.tabla th{font:600 13px/1.3 var(--font-title);text-align:left;color:var(--gris);text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;border-bottom:1px solid var(--raya);background:var(--raya-2);position:sticky;top:0}
+.tabla td{padding:8px 10px;border-bottom:1px solid var(--raya-2);vertical-align:top}
+.tabla td.num,.tabla th.num{text-align:right;white-space:nowrap}
+.tabla tr:last-child td{border-bottom:0}
 .aviso-nif{font-size:11.5px;color:var(--gris)}
 .pill{display:inline-block;padding:1px 7px;border-radius:2px;font-size:12px;font-weight:600;white-space:nowrap}
 .n-dentro{background:var(--dentro-suave);color:var(--dentro)}
@@ -103,20 +100,19 @@ tr:last-child td{border-bottom:0}
 .leyenda{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--gris)}
 .leyenda i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .filtro{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
-.filtro input,.filtro select{font:inherit;font-size:14px;padding:6px 9px;border:1px solid var(--raya);border-radius:3px;background:var(--hoja);color:var(--tinta);min-width:0}
+.filtro input,.filtro select{font:inherit;font-size:14px;padding:6px 9px;border:1px solid var(--raya);border-radius:3px;background:var(--hoja);color:var(--tinta);min-width:0;max-width:100%}
 .filtro input{flex:1 1 220px}
 details.cadena summary{cursor:pointer;color:var(--sello);font-size:12.5px}
 details.cadena ol{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--gris)}
 .vacio{padding:18px;color:var(--gris);font-size:14px;border:1px dashed var(--raya);border-radius:3px}
 .pendiente{display:grid;gap:12px;max-width:75ch}
-.pendiente h3{margin:0;font-size:16px}
+.pendiente h3{margin:0;font:600 17px/1.2 var(--font-title);text-transform:uppercase;letter-spacing:.05em}
 .pendiente p{margin:0;color:var(--gris);font-size:14px}
-section.metodo{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px 30px;padding:24px 22px;font-size:14px}
-section.metodo h2{grid-column:1/-1;margin:0;font-size:22px;font-stretch:118%;font-weight:800}
-section.metodo h3{margin:0 0 4px;font-size:14px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--gris);font-weight:500}
-section.metodo p{margin:0 0 8px;max-width:65ch}
+.method ol.pasos{padding-left:24px}
+.method ol.pasos li{margin:0 0 10px}
+.method ol.pasos li::marker{font-family:var(--font-data);color:var(--accent)}
+.method .params{margin:6px 0 4px}
 .mas{font-size:13px;color:var(--gris);margin:10px 0 0}
-footer{max-width:1240px;margin:0 auto;padding:0 16px 40px;color:var(--gris);font-size:13px}
 @media (max-width:860px){
   main{grid-template-columns:minmax(0,1fr)}
   nav.lista{position:static}
@@ -126,22 +122,30 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 40px;color:var(--gris);font
   .libro{margin:4px -16px 0}
   .libro button{padding:12px 16px}
   .panel{padding:14px 16px 22px}
+  .pestanas{padding:0 4px}
+  .pestanas button{padding:10px 8px}
+}
+@media (max-width:640px){
+  table.params th{white-space:normal}
 }
 @media (prefers-reduced-motion:no-preference){.libro button,nav.lista li button{transition:background .12s}}
 </style>
 </head>
 <body>
-<header class="cab"><div class="cab-in">
+<header class="site-header">
   <div class="marca">Registro público · BOE · BORME · cuentas consolidadas</div>
-  <h1>Cartera de las cotizadas</h1>
-  <p class="lema">Qué proyectos energéticos tramita en España cada empresa cotizada, qué le exigieron sus declaraciones de impacto ambiental y qué dicen esas declaraciones de la Red Natura 2000. Una sociedad solo se asigna a una cotizada cuando la propia cotizada la declara en el anexo de sus cuentas consolidadas, o cuando su socio único inscrito en el BORME lleva hasta una que sí figura.</p>
+  <h1>Cartera de las <span>cotizadas</span></h1>
+  <p class="lede">Qué proyectos energéticos tramita en España cada empresa cotizada, qué le exigieron sus declaraciones de impacto ambiental y qué dicen esas declaraciones de la Red Natura 2000, con los anuncios del BOE desde 2018, el BORME y los anexos de sus cuentas consolidadas.</p>
+  <div class="figures">
+<!--__FIGURES__-->
+  </div>
   <div class="avisos">
     <span class="chip sello"><b>No es asesoramiento de inversión</b></span>
     <span class="chip">Sin puntuaciones ni clasificaciones</span>
     <span class="chip">Cada cifra enlaza a su fuente</span>
     <a class="chip" href="https://github.com/Asensio94/cartera-cotizadas/issues/new?template=replica.yml">Derecho de réplica</a>
   </div>
-</div></header>
+</header>
 <main>
   <nav class="lista" aria-label="Cotizadas">
     <h2>Cotizadas</h2>
@@ -150,23 +154,54 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 40px;color:var(--gris);font
     <select id="lista-movil" aria-label="Elegir cotizada"></select>
   </nav>
   <div id="ficha" class="hoja" aria-live="polite"><div class="ficha"><p>Cargando…</p></div></div>
-  <section class="metodo hoja" id="metodo">
-    <h2>Cómo se hace</h2>
-    <div><h3>Quién es de quién</h3>
-      <p>La prueba principal es el anexo de sociedades dependientes, asociadas y negocios conjuntos de las cuentas anuales consolidadas de cada cotizada, formuladas por sus administradores, auditadas y depositadas en la CNMV. Se leen solo las páginas con forma de tabla de sociedades y se busca la denominación exacta, sin la forma jurídica: en el Registro Mercantil una denominación no se repite. Por eso solo cuentan las formas jurídicas españolas («Enel Green Power S.p.A.» no es «Enel Green Power, S.L.») y nunca un trozo de denominación que no identifica a nadie («Energía, S.L.»).</p>
-      <p>Cuando la web de la cotizada no deja descargar el documento a un programa o pide resolver un CAPTCHA, se usa el informe financiero anual que la empresa deposita en la CNMV en formato electrónico ESEF. De ese formato solo se leen las celdas de tabla, y la prueba cita el folio impreso, que es lo que se busca al abrir el documento.</p>
-      <p>La segunda prueba es el BORME: la última declaración de socio único inscrita, incluido el cambio de socio único con el que se inscribe la venta de una sociedad vehículo, mientras la sociedad no pierda después la unipersonalidad. Se sube eslabón a eslabón hasta una sociedad que figure en un anexo.</p></div>
-    <div><h3>Lo que no se hace</h3>
-      <p>No se asigna nada por parecido de nombre. Una sociedad que lleva a dos cotizadas que no son matriz y filial entre sí aparece «en conflicto», con las dos pruebas. Cuando una cotizada y su matriz cotizada declaran la misma sociedad (Endesa y Enel, EDP Renováveis y EDP), se asigna a la más cercana.</p>
-      <p>La potencia es la de la instalación completa, aunque la cotizada solo tenga una parte. Una instalación cuenta para una cotizada si alguna de sus sociedades figura como titular en algún anuncio del BOE desde 2018.</p></div>
-    <div><h3>Red Natura 2000</h3>
-      <p>No hay cruce cartográfico: se lee lo que declara la propia resolución del BOE y se enseña la frase. «Dentro o atraviesa» cuando dice que el proyecto o una de sus partes está dentro, atraviesa, ocupa o afecta directamente a un espacio; «en el entorno» cuando colinda, da una distancia o habla de afección indirecta; «declara que no coincide» cuando lo niega expresamente. Una frase con negación nunca cuenta como afección, y las que hablan de alternativas descartadas bajan a «entorno».</p></div>
-    <div><h3>Límites</h3>
-      <p>Faltan los proyectos autonómicos (menos de 50 MW, salvo los que el grafo recoge del BOE), los litigios y el cumplimiento del condicionado: no hay fuentes abiertas y estructuradas. Los anexos son del cierre del ejercicio; una venta posterior se ve en el BORME y queda en conflicto. Los datos de base son el <a href="https://asensio94.github.io/grafo-promotores/">grafo de promotores</a> y el <a href="https://asensio94.github.io/observatorio-alegaciones/condicionado.html">condicionado del observatorio</a>.</p>
-      <p>¿Una cifra está mal? Abre una <a href="https://github.com/Asensio94/cartera-cotizadas/issues/new?template=replica.yml">réplica</a> con el documento que lo prueba: se corrige y se deja constancia.</p></div>
-  </section>
 </main>
-<footer id="pie"></footer>
+<section class="method" id="metodo">
+  <h2>Cómo se calcula</h2>
+  <p>Una sociedad solo se asigna a una cotizada cuando la propia cotizada la declara en el anexo de sus cuentas consolidadas, o cuando su socio único inscrito en el BORME lleva hasta una que sí figura.</p>
+  <ol class="pasos">
+    <li><b>Quién es de quién.</b> La prueba principal es el anexo de sociedades dependientes, asociadas y negocios conjuntos de las cuentas anuales consolidadas de cada cotizada, formuladas por sus administradores, auditadas y depositadas en la CNMV. Se leen solo las páginas con forma de tabla de sociedades y se busca la denominación exacta, sin la forma jurídica: en el Registro Mercantil una denominación no se repite. Por eso solo cuentan las formas jurídicas españolas («Enel Green Power S.p.A.» no es «Enel Green Power, S.L.») y nunca un trozo de denominación que no identifica a nadie («Energía, S.L.»).</li>
+    <li><b>Cuando no se puede descargar.</b> Cuando la web de la cotizada no deja descargar el documento a un programa o pide resolver un CAPTCHA, se usa el informe financiero anual que la empresa deposita en la CNMV en formato electrónico ESEF. De ese formato solo se leen las celdas de tabla, y la prueba cita el folio impreso, que es lo que se busca al abrir el documento.</li>
+    <li><b>El BORME, eslabón a eslabón.</b> La segunda prueba es el BORME: la última declaración de socio único inscrita, incluido el cambio de socio único con el que se inscribe la venta de una sociedad vehículo, mientras la sociedad no pierda después la unipersonalidad. Se sube eslabón a eslabón hasta una sociedad que figure en un anexo.</li>
+    <li><b>Lo que no se hace.</b> No se asigna nada por parecido de nombre. Una sociedad que lleva a dos cotizadas que no son matriz y filial entre sí aparece «en conflicto», con las dos pruebas. Cuando una cotizada y su matriz cotizada declaran la misma sociedad (Endesa y Enel, EDP Renováveis y EDP), se asigna a la más cercana.</li>
+    <li><b>Instalaciones y potencia.</b> Una instalación cuenta para una cotizada si alguna de sus sociedades figura como titular en algún anuncio del BOE desde 2018, según el <a href="https://asensio94.github.io/grafo-promotores/">grafo de promotores</a>. La potencia es la de la instalación completa, aunque la cotizada solo tenga una parte.</li>
+    <li><b>Evaluación ambiental.</b> Se toman las declaraciones e informes de impacto ambiental del <a href="https://asensio94.github.io/observatorio-alegaciones/condicionado.html">condicionado del observatorio</a> cuyo promotor es una sociedad probada, con sus condiciones, el seguimiento de mortalidad y la fecha en que caducan.</li>
+    <li><b>Red Natura 2000.</b> No hay cruce cartográfico: se lee lo que declara la propia resolución del BOE y se enseña la frase. «Dentro o atraviesa» cuando dice que el proyecto o una de sus partes está dentro, atraviesa, ocupa o afecta directamente a un espacio; «en el entorno» cuando colinda, da una distancia o habla de afección indirecta; «declara que no coincide» cuando lo niega expresamente. Una frase con negación nunca cuenta como afección, y las que hablan de alternativas descartadas bajan a «entorno».</li>
+    <li><b>Fraccionamiento.</b> Se recogen los indicios del grafo de promotores en los que figura alguna sociedad probada: conjuntos de instalaciones que por separado quedan por debajo de 50 MW y juntas lo superan.</li>
+    <li><b>Las cifras de arriba.</b> Suman todas las cotizadas de la página y cuentan cada instalación, resolución y sociedad una sola vez, aunque aparezca en dos cotizadas.</li>
+  </ol>
+  <h3>Parámetros</h3>
+  <table class="params">
+    <tbody>
+      <tr><th scope="row">Denominación</th><td>Coincidencia exacta, sin la forma jurídica</td></tr>
+      <tr><th scope="row">Formas jurídicas</th><td>Solo españolas: S.A., S.L., S.A.U., S.L.U., A.I.E.</td></tr>
+      <tr><th scope="row">Anuncios del BOE</th><td>Desde 2018</td></tr>
+      <tr><th scope="row">«En el entorno»</th><td>Colinda, a 5 km o menos, o afección indirecta</td></tr>
+      <tr><th scope="row">«Declara que no coincide»</th><td>Lo niega expresamente, o el espacio más próximo está a más de 5 km</td></tr>
+      <tr><th scope="row">Fraccionamiento</th><td>Por separado, por debajo de 50 MW (competencia autonómica); juntas, por encima</td></tr>
+      <tr><th scope="row">Caducidad próxima</th><td>La DIA caduca en los próximos 12 meses</td></tr>
+    </tbody>
+  </table>
+  <h3>Validación</h3>
+  <p>Pendiente. Cada cifra enlaza al documento que la prueba. ¿Una cifra está mal? Abre una <a href="https://github.com/Asensio94/cartera-cotizadas/issues/new?template=replica.yml">réplica</a> con el documento que lo prueba: se corrige y se deja constancia.</p>
+  <h3>Límites</h3>
+  <p>Faltan los proyectos autonómicos (menos de 50 MW, salvo los que el grafo recoge del BOE), los litigios y el cumplimiento del condicionado: no hay fuentes abiertas y estructuradas. Los anexos son del cierre del ejercicio; una venta posterior se ve en el BORME y queda en conflicto. Los datos de base son el <a href="https://asensio94.github.io/grafo-promotores/">grafo de promotores</a> y el <a href="https://asensio94.github.io/observatorio-alegaciones/condicionado.html">condicionado del observatorio</a>.</p>
+</section>
+<footer class="site-footer">
+  <p class="principle">Datos públicos, reglas a la vista y cada cifra enlazada a su fuente. Indicios, no veredictos.</p>
+  <p id="pie"></p>
+  <p>Código MIT. Los datos derivan de fuentes públicas (BOE, BORME, cuentas depositadas en la CNMV) y se publican con enlace a cada una.</p>
+  <nav aria-label="Proyectos hermanos"><ul class="siblings">
+    <li><a href="https://asensio94.github.io/observatorio-alegaciones/">Observatorio de alegaciones</a></li>
+    <li><a href="https://asensio94.github.io/vigia-incendios/">Vigía de incendios</a></li>
+    <li><a href="https://asensio94.github.io/centinela-natura/">Centinela Natura</a></li>
+    <li><a href="https://asensio94.github.io/vigilancia-humedales/">Vigilancia de humedales</a></li>
+    <li><a href="https://asensio94.github.io/sub-nocte/">Sub Nocte</a></li>
+    <li><a href="https://asensio94.github.io/riesgo-tendidos-aves/">Riesgo de tendidos para aves</a></li>
+    <li><a href="https://asensio94.github.io/grafo-promotores/">Grafo de promotores</a></li>
+    <li aria-current="page"><a href="https://asensio94.github.io/cartera-cotizadas/">Cartera de las cotizadas</a></li>
+    <li><a href="https://asensio94.github.io/cuaderno-campo/">Cuaderno de campo</a></li>
+  </ul></nav>
+</footer>
 <script>
 const $ = (s, el=document) => el.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -308,7 +343,9 @@ fetch("datos/cartera.json").then(r => r.json()).then(d => {
   lista();
   const h = leerHash();
   elegir(h.c || (D.cotizadas.find(c => c.resumen.instalaciones) || D.cotizadas[0]).id, h.t);
-  const f = D.fuentes, asig = D.cotizadas.reduce((a,c)=>a+c.resumen.mw,0);
+  // each installation counted once, even when two listed companies share it (same rule as the header figures)
+  const f = D.fuentes, mwById = new Map(D.cotizadas.flatMap(c => c.instalaciones.map(i => [i.id, i.mw||0])));
+  const asig = [...mwById.values()].reduce((a,v)=>a+v,0);
   $("#pie").innerHTML = `Datos del ${fecha(D.generado)}. Grafo de promotores del ${fecha(f.grafo)} (${fmt(f.instalaciones_boe)} instalaciones, ${fmt(f.mw_boe)} MW en el BOE desde 2018) y condicionado del ${fecha((f.condicionado||"").slice(0,10))} (${fmt(f.resoluciones)} resoluciones). Las cotizadas de esta página suman ${fmt(asig)} MW probados; el resto son promotores no cotizados o sin prueba documental. Código y datos: <a href="https://github.com/Asensio94/cartera-cotizadas">github.com/Asensio94/cartera-cotizadas</a>.`;
 }).catch(e => { $("#ficha").innerHTML = `<div class="ficha"><p>No se pudieron cargar los datos (${esc(e.message)}). Recarga la página.</p></div>`; });
 addEventListener("hashchange", () => { const h = leerHash(); if (D && h.c && (!actual || h.c !== actual.id || h.t !== pestana)) elegir(h.c, h.t); });
@@ -318,7 +355,45 @@ addEventListener("hashchange", () => { const h = leerHash(); if (D && h.c && (!a
 """
 
 
+COMMON_CSS = Path(__file__).with_name("common.css")
+
+
+def _fmt_es(n: float, decimals: int = 0) -> str:
+    """Spanish number format: dot for thousands, comma for decimals."""
+    s = f"{n:,.{decimals}f}"
+    return s.replace(",", "\0").replace(".", ",").replace("\0", ".")
+
+
+def _figures(datos: dict) -> str:
+    """Header figures over all listed companies, counting each installation, resolution and company once."""
+    mw_by_installation: dict[str, float] = {}
+    resolutions, companies = set(), set()
+    for c in datos["cotizadas"]:
+        for i in c["instalaciones"]:
+            mw_by_installation[i["id"]] = i.get("mw") or 0
+        resolutions.update(d["id"] for d in c["dia"])
+        companies.update(s["id"] for s in c["sociedades"])
+    figures = [
+        (_fmt_es(len(datos["cotizadas"])), "cotizadas"),
+        (_fmt_es(sum(mw_by_installation.values())), "MW probados en el BOE"),
+        (_fmt_es(len(mw_by_installation)), "instalaciones"),
+        (_fmt_es(len(resolutions)), "resoluciones ambientales"),
+        (_fmt_es(len(companies)), "sociedades probadas"),
+    ]
+    return "\n".join(f"    <div><b>{v}</b><span>{label}</span></div>" for v, label in figures)
+
+
+def render(datos: dict) -> str:
+    html = (PLANTILLA
+            .replace("/*__COMMON_CSS__*/", COMMON_CSS.read_text(encoding="utf-8").strip())
+            .replace("<!--__FIGURES__-->", _figures(datos)))
+    left = [m for m in ("__COMMON_CSS__", "__FIGURES__") if m in html]
+    if left:
+        raise ValueError(f"unreplaced placeholders in the page: {left}")
+    return html
+
+
 def escribir(datos: dict) -> None:
     config.DOCS.mkdir(parents=True, exist_ok=True)
-    (config.DOCS / "index.html").write_text(PLANTILLA, encoding="utf-8")
+    (config.DOCS / "index.html").write_text(render(datos), encoding="utf-8")
     (config.DOCS / ".nojekyll").write_text("", encoding="utf-8")
