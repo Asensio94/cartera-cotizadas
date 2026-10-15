@@ -9,6 +9,8 @@ aparecen sus sociedades. Cada cifra enlaza a su fuente.
 No es asesoramiento de inversión. No hay puntuaciones ni clasificaciones: las cotizadas se ordenan
 alfabéticamente y cada dato se enseña con el documento que lo prueba.
 
+> **Estado: mantenimiento.** Sigue funcionando y se corrigen sus fallos, pero por ahora no se le añaden funciones.
+
 ## Cómo funciona
 
 1. **Sociedades de cada cotizada.** Se lee el anexo de sociedades dependientes, asociadas y negocios conjuntos
